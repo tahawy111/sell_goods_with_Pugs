@@ -1,0 +1,139 @@
+<%- include('./partials/head.ejs') %>
+<style>
+  @media print {
+    .hide {
+      display: none;
+    }
+  }
+</style>
+<div class="container-fluid">
+  <div class="row my-4">
+    <form
+      class="d-flex justify-content-center mb-1 hide"
+      method="get"
+      action="/"
+    >
+      <select name="category" class="form-control form-control-lg hide">
+        <% category.forEach((ele) => { %>
+        <option value="<%= ele.category %>"><%= ele.category %></option>
+        <% }) %>
+      </select>
+      <button class="btn btn-outline-success hide" type="submit">Filter</button>
+    </form>
+    <div class="col-lg-12">
+      <div class="table-responsive me-5">
+        <table class="table table-striped text-center my-3 table-data">
+          <thead>
+            <tr class="table-dark">
+              <th>#</th>
+              <th>الاسم</th>
+              <th>السعر</th>
+              <th>العدد</th>
+              <th>الباركود</th>
+              <th>الصورة</th>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody style="vertical-align: middle">
+            <% data.forEach((ele,index)=>{ %>
+            <tr>
+              <td><%= index + 1 %></td>
+              <td><%= ele.name %></td>
+              <td><%= ele.price %></td>
+              <td><%= ele.quantity %></td>
+              <td><%= ele.barcode %></td>
+              <td>
+                <% if(ele.image !== "No Data"){ %>
+                <img
+                  width="50"
+                  class="img-thumbnail"
+                  src="/uploads/images/<%= ele.image %>"
+                />
+                <% }else{ %> لا توجد صورة <% } %>
+              </td>
+              <td>
+                <a href="/details/<%= ele._id %>" class="btn btn-primary hide"
+                  >اكثر</a
+                >
+              </td>
+              <td>
+                <% if (typeof userId === "undefined") { %>
+
+                <a class="btn btn-success hide" href="/cart/<%= ele._id %>"
+                  >بيع</a
+                >
+
+                <% }else{ %>
+
+                <form action="/cart" method="post">
+                  <input type="hidden" name="id" value="<%= ele._id %>" />
+                  <input type="hidden" name="userId" value="<%= userId %>" />
+                  <button class="btn btn-success hide" type="submit">
+                    بيع ديلر
+                  </button>
+                </form>
+
+                <% } %>
+              </td>
+            </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (typeof userId === "undefined") { %>
+
+<a class="d-none barcode-handle-sell" href=""></a>
+
+<% }else{ %>
+
+<form action="/cart2" method="post">
+  <input type="hidden" name="userId" value="<%= userId %>" />
+  <input type="hidden" name="barcode" />
+</form>
+
+<% } %>
+
+<script>
+  let code = "";
+  let reading = false;
+  const barcodeHandleSell = document.querySelector(".barcode-handle-sell");
+  const dealerBarcodeHandle = document.querySelector(`input[name="barcode"]`);
+  const barcodeForm = document.querySelector("form");
+
+  document.addEventListener("keypress", (e) => {
+    //usually scanners throw an 'Enter' key at the end of read
+    if (e.keyCode === 13) {
+      if (code.length > 10) {
+        console.log(code);
+        /// code ready to use
+        code = "";
+      }
+    } else {
+      code += e.key; //while this is not an 'enter' it stores the every key
+      if (barcodeHandleSell) {
+        barcodeHandleSell.href = `/cart2/${code}`;
+        barcodeHandleSell.click();
+      } else {
+        dealerBarcodeHandle.value = code;
+        barcodeForm.submit();
+      }
+    }
+
+    //run a timeout of 200ms at the first read and clear everything
+    if (!reading) {
+      reading = true;
+      setTimeout(() => {
+        code = "";
+        reading = false;
+      }, 200); //200 works fine for me but you can adjust it
+    }
+  });
+</script>
+
+<%- include('./partials/footer.ejs') %>
